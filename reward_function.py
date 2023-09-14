@@ -32,13 +32,22 @@ def reward_function(params):
     next_point_0 = getNextWaypoint(waypoints, prev_point_index, 1)
     next_point_1 = getNextWaypoint(waypoints, prev_point_index, 2)
     next_point_2 = getNextWaypoint(waypoints, prev_point_index, 3)
+    next_point_3 = getNextWaypoint(waypoints, prev_point_index, 4)
+    next_point_4 = getNextWaypoint(waypoints, prev_point_index, 5)
+    next_point_5 = getNextWaypoint(waypoints, prev_point_index, 6)
 
-    # track section headings/angles (relative to previos track section angle)
+    # track section headings/angles (relative to previous track section angle)
     current_track_section_heading = getSectionHeading(prev_point, next_point_0)
     next_track_section_0_heading = getSectionHeading(
         next_point_0, next_point_1)
     next_track_section_1_heading = getSectionHeading(
         next_point_1, next_point_2)
+    next_track_section_2_heading = getSectionHeading(
+        next_point_2, next_point_3)
+    next_track_section_3_heading = getSectionHeading(
+        next_point_3, next_point_4)
+    next_track_section_4_heading = getSectionHeading(
+        next_point_4, next_point_5)
 
     # car heading relative to track sections
     car_heading_relative_to_current_track_section = calculateHeadingRelativeToAngle(
@@ -47,6 +56,10 @@ def reward_function(params):
         heading, next_track_section_0_heading)
     car_heading_relative_to_next_track_section_1 = calculateHeadingRelativeToAngle(
         heading, next_track_section_1_heading)
+    car_heading_relative_to_next_track_section_2 = calculateHeadingRelativeToAngle(
+        heading, next_track_section_2_heading)
+    car_heading_relative_to_next_track_section_3 = calculateHeadingRelativeToAngle(
+        heading, next_track_section_3_heading)
 
     # speed bonuses relative to track section headings only
     if current_track_section_heading == next_track_section_0_heading and speed >= fast:
@@ -62,23 +75,23 @@ def reward_function(params):
         reward += 10
 
     # track position bonuses only
-    if next_track_section_0_heading > 0:
+    if next_track_section_3_heading > 0:
         # approaching, or in the middle of a right turn
-        if next_track_section_0_heading < next_track_section_1_heading and is_left_of_center == True:
-            # car is on the outside of the track approaching a right turn (prior to apex)
+        if next_track_section_3_heading <= next_track_section_4_heading and is_left_of_center == True:
+            # car is 3 track sections away from the apex and on the outside of the turn
             reward += 10
-        elif next_track_section_0_heading > next_track_section_1_heading and is_left_of_center == False:
-            # car is on the outside of the track as it exits a right turn (after apex)
-            reward += 10
+        elif next_track_section_3_heading > next_track_section_4_heading and is_left_of_center == False:
+            # car is on the inside of the track, and the track section immediately after the apex is 3 sections away
+            reward += 12
 
-    if next_track_section_0_heading < 0:
+    if next_track_section_2_heading < 0:
         # approaching, or in the middle of a left turn
-        if next_track_section_0_heading > next_track_section_1_heading and is_left_of_center == False:
-            # car is on the outside of the track approaching a left turn (prior to apex)
+        if next_track_section_3_heading >= next_track_section_4_heading and is_left_of_center == False:
+            # car is 3 track sections away from the apex and on the outside of the turn
             reward += 10
-        elif next_track_section_0_heading < next_track_section_1_heading and is_left_of_center == True:
-            # car is on the outside of the track as it exits a right turn (after apex)
-            reward += 10
+        elif next_track_section_3_heading < next_track_section_4_heading and is_left_of_center == True:
+            # car is on the inside of the track, and the track section immediately after the apex is 3 sections away
+            reward += 12
 
     # SLOW basic line tracing (small)bonus to get training off on the right foot
     marker_1 = 0.1 * track_width
